@@ -121,6 +121,27 @@ def test_msbuilddeps_format_names():
     assert counter == 9
 
 
+def test_msbuilddeps_does_not_force_debugger_flavor():
+    # https://github.com/conan-io/conan/issues/20339
+    client = TestClient()
+    client.save({"conanfile.py": GenConanfile()})
+    client.run("create . --name=pkg --version=1.0")
+    conanfile = textwrap.dedent("""
+        from conan import ConanFile
+        class Pkg(ConanFile):
+            settings = "os", "compiler", "arch", "build_type"
+            generators = "MSBuildDeps"
+            requires = "pkg/1.0"
+        """)
+    client.save({"conanfile.py": conanfile})
+    client.run("install . -s os=Windows -s compiler=msvc "
+               "-s compiler.version=194 -s compiler.runtime=dynamic "
+               "-s arch=x86_64 -s build_type=Release")
+    props = client.load("conan_pkg_release_x64.props")
+    assert "<DebuggerFlavor>" not in props
+    assert "<LocalDebuggerEnvironment>" in props
+
+
 @pytest.mark.skipif(platform.system() != "Windows", reason="Requires Windows")
 class TestMSBuildDepsSkips:
     # https://github.com/conan-io/conan/issues/15624

@@ -466,6 +466,8 @@ def test_install_reference_gcc():
     assert "Generator 'MSBuildDeps' calling 'generate()'" in client.out
     props = client.load("conan_pkg_release_x64.props")
     assert '<?xml version="1.0" encoding="utf-8"?>' in props
+    assert "<DebuggerFlavor>" not in props
+    assert "<LocalDebuggerEnvironment>" in props
     # This will overwrite the existing one, cause configuration and arch is the same
     client.run("install . -s os=Linux -s compiler=gcc -s compiler.version=5.2 '"
                "'-s compiler.libcxx=libstdc++")
